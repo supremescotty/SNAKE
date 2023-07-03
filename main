@@ -1,0 +1,91 @@
+import pygame
+import sys
+import random
+from pygame.math import Vector2
+
+# Game parameters
+CELL_SIZE = 40
+CELL_NUMBER = 20
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+
+class SNAKE:
+    def __init__(self):
+        self.body = [Vector2(5, 10), Vector2(4, 10), Vector2(3, 10)]
+        self.direction = Vector2(1, 0)
+
+    def draw_snake(self):
+        for block in self.body:
+            x_pos = int(block.x * CELL_SIZE)
+            y_pos = int(block.y * CELL_SIZE)
+            block_rect = pygame.Rect(x_pos, y_pos, CELL_SIZE, CELL_SIZE)
+            pygame.draw.rect(screen, WHITE, block_rect)
+
+    def move_snake(self):
+        body_copy = self.body[:-1]
+        body_copy.insert(0, body_copy[0] + self.direction)
+        self.body = body_copy[:]
+
+    def add_block(self):
+        self.body.append(self.body[-1])
+
+class FOOD:
+    def __init__(self):
+        self.randomize()
+
+    def draw_food(self):
+        food_rect = pygame.Rect(int(self.pos.x * CELL_SIZE), int(self.pos.y * CELL_SIZE), CELL_SIZE, CELL_SIZE)
+        pygame.draw.rect(screen, GREEN, food_rect)
+
+    def randomize(self):
+        self.x = random.randint(0, CELL_NUMBER - 1)
+        self.y = random.randint(0, CELL_NUMBER - 1)
+        self.pos = Vector2(self.x, self.y)
+
+pygame.init()
+# Creating the display surface
+screen = pygame.display.set_mode((CELL_NUMBER * CELL_SIZE, CELL_NUMBER * CELL_SIZE))
+clock = pygame.time.Clock()
+
+# Snake and food
+snake = SNAKE()
+food = FOOD()
+
+# Game loop
+while True:
+    # Event handling
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                snake.direction = Vector2(0, -1)
+            if event.key == pygame.K_DOWN:
+                snake.direction = Vector2(0, 1)
+            if event.key == pygame.K_LEFT:
+                snake.direction = Vector2(-1, 0)
+            if event.key == pygame.K_RIGHT:
+                snake.direction = Vector2(1, 0)
+
+    # Snake and Food collision
+    if snake.body[0] == food.pos:
+        food.randomize()
+        snake.add_block()
+
+    # Snake self collision
+    if not snake.body[0] in snake.body[1:]:
+        for block in snake.body[1:]:
+            if block == snake.body[0]:
+                pygame.quit()
+
+    # Snake and boundary collision
+    if not 0 <= snake.body[0].x < CELL_NUMBER or not 0 <= snake.body[0].y < CELL_NUMBER:
+        pygame.quit()
+
+    screen.fill((175, 215, 70))
+    snake.draw_snake()
+    food.draw_food()
+    snake.move_snake()
+    pygame.display.update()
+    clock.tick(60)
